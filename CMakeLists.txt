@@ -46,6 +46,13 @@ foreach(stage vert frag)
 endforeach()
 add_custom_target(shaders DEPENDS ${SPV_HEADERS})
 
+# --- the core: score, synth, guitars, chords, composer, projects, export ----
+# (no window, no GPU, no audio device: tested headlessly, used by the CLI)
+add_library(ft_core STATIC src/song.c src/composer.c)
+target_include_directories(ft_core PUBLIC src)
+target_link_libraries(ft_core PUBLIC m)
+target_compile_options(ft_core PRIVATE ${FT_WARN})
+
 # --- the workbench: window, Vulkan, fonts, widgets (the UI layer is vxide's) --
 add_executable(ft2002 src/main.c src/base.c src/gpu.c src/font.c src/draw.c src/icons.c src/theme.c src/menu.c
   src/ui.c
@@ -58,6 +65,11 @@ target_compile_options(ft2002 PRIVATE ${FT_WARN})
 # --- tests ------------------------------------------------------------------
 include(CTest)
 if(BUILD_TESTING)
+  foreach(t composer)
+    add_executable(test_${t} tests/test_${t}.c)
+    target_link_libraries(test_${t} PRIVATE ft_core)
+    add_test(NAME ${t} COMMAND test_${t})
+  endforeach()
   # the headless workbench needs a Vulkan device (GPU or lavapipe)
   add_test(NAME ui_shot COMMAND ft2002 --headless 1280x800 --shot ${CMAKE_CURRENT_BINARY_DIR}/ui_shot.png)
 endif()
