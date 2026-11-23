@@ -21,12 +21,25 @@ static int fails;
 		}                                                                                                      \
 	} while (0)
 
+/* field by field: the structs have padding bytes */
+static bool same_event(const NoteEvent *a, const NoteEvent *b)
+{
+	return a->tick == b->tick && a->len == b->len && a->ch == b->ch && a->vel == b->vel && a->layer == b->layer &&
+	       a->fx == b->fx && a->count == b->count && a->art == b->art && !memcmp(a->notes, b->notes, 6) &&
+	       a->gate == b->gate && a->strum == b->strum && a->string == b->string;
+}
+
 static bool same(const Song *a, const Song *b)
 {
 	if (a->nevents != b->nevents || a->ntracks != b->ntracks || a->nsections != b->nsections)
 		return false;
-	if (memcmp(a->events, b->events, a->nevents * sizeof *a->events))
-		return false;
+	for (u32 i = 0; i < a->nevents; i++)
+		if (!same_event(&a->events[i], &b->events[i]))
+			return false;
+	for (u32 i = 0; i < a->nsections; i++)
+		if (a->sections[i].kind != b->sections[i].kind || a->sections[i].start_bar != b->sections[i].start_bar ||
+		    a->sections[i].bars != b->sections[i].bars)
+			return false;
 	for (int t = 0; t < a->ntracks; t++) {
 		for (int k = 0; k < patch_field_count; k++)
 			if (patch_get(&a->patches[t], &patch_fields[k]) != patch_get(&b->patches[t], &patch_fields[k]))
@@ -38,8 +51,7 @@ static bool same(const Song *a, const Song *b)
 			return false;
 	}
 	return a->bpm == b->bpm && a->key == b->key && a->total_bars == b->total_bars && a->seed == b->seed &&
-	       !strcmp(a->style, b->style) && !strcmp(a->description, b->description) &&
-	       !memcmp(a->sections, b->sections, a->nsections * sizeof *a->sections);
+	       !strcmp(a->style, b->style) && !strcmp(a->description, b->description);
 }
 
 int main(void)

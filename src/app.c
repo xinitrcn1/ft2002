@@ -528,13 +528,13 @@ const ChordLib *app_chords(void)
 	                                                                                    : gtr_preset(GTR_STEEL);
 	int open[6];
 	int strings = gtr_open_strings(&p, open);
-	int key = strings;
+	u32 key = (u32)strings;
 	for (int i = 0; i < 6; i++)
-		key = key * 131 + open[i];
-	if (st.lib_track != t || st.lib_key != key) {
+		key = key * 131u + (u32)open[i];
+	if (st.lib_track != t || st.lib_key != (int)key) {
 		chordlib_build(st.lib, open, strings);
 		st.lib_track = t;
-		st.lib_key = key;
+		st.lib_key = (int)key;
 		int n = chordlib_count(st.lib, st.ch_root, st.ch_q);
 		if (st.ch_voicing >= n)
 			st.ch_voicing = 0;
