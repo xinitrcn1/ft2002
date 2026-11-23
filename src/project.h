@@ -53,6 +53,10 @@ void history_init(History *h, const Song *s);
 void history_free(History *h);
 /* Record s after an edit called `what`. */
 void history_push(History *h, const Song *s, const char *what);
+/* Replace the current state with s, keeping its name (a knob drag or a
+ * spin held: one step however many values went by). */
+void history_amend(History *h, const Song *s);
+const char *history_current(const History *h); /* the current state's edit name */
 /* Step back / forward: copies into s; returns the edit's name or NULL. */
 const char *history_undo(History *h, Song *s);
 const char *history_redo(History *h, Song *s);

@@ -478,11 +478,11 @@ static void draw_status_bar(int y, int h)
 {
 	draw_rect(0, y, app.w, h, COL(C_STATUS_BG));
 	int ty = y + (h - font_m[FONT_SMALL].line) / 2;
-	if (app.status[0])
-		draw_text(FONT_SMALL, PX(10), ty, app.status, strlen(app.status), COL(C_STATUS_FG));
 	char right[160];
 	views_status_right(right, sizeof right);
 	int tw = font_width(FONT_SMALL, right, strlen(right));
+	if (app.status[0])
+		draw_text_fit(FONT_SMALL, PX(10), ty, app.status, strlen(app.status), app.w - tw - PX(40), COL(C_STATUS_FG));
 	draw_text(FONT_SMALL, app.w - tw - PX(10), ty, right, strlen(right), COL(C_STATUS_FG));
 }
 

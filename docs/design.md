@@ -34,14 +34,20 @@ chords on a 16th-note grid (6 ticks a row, tracker style).
   composer's channels are a project's first tracks.
 - Nothing is sampled; renders are deterministic (same project, same bytes).
 
-## Plan (one commit each)
+## Steps (one commit each)
 
 1. Skeleton: build, the UI layer, the workbench shell, headless shots.
-2. The synth and the composer from geosim, offline WAV rendering.
-3. Guitars: the string model, bodies, amps, articulations.
-4. Chords: the voicing library, strums.
-5. Projects: tracks, editing, save / load.
-6. Live audio and the transport.
-7. The workbench views: arrangement, chord palette, instrument panel, mixer.
-8. The autogenerator.
-9. Export: MP3 and Opus.
+2. The score and the composer from geosim (bit-exact).
+3. Chords: the voicing library, strum patterns.
+4. The player from geosim, modelled guitars, offline rendering and export.
+5. Projects, presets, the autogenerator, ft2002-cli.
+6. The workbench: live audio, transport, side views, arrangement, editors.
+
+## Next
+
+- Recording from a MIDI keyboard / guitar-to-MIDI; MIDI import/export.
+- Clip-level editing in the arrangement (copy a bar range, move sections).
+- More strum controls: swing, humanised timing below a tick, per-strum velocity curves.
+- Per-note string choice in the tab (drag a fret to another string).
+- The autogenerator: verse/chorus chord substitutions per band, drum fills written for rock kits.
+- Audition the guitar models against references (nothing has been checked by ear yet).

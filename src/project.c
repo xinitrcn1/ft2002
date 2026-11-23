@@ -466,6 +466,10 @@ void history_push(History *h, const Song *s, const char *what)
 	h->at++;
 }
 
+void history_amend(History *h, const Song *s) { song_copy(&h->snap[slot(h, h->at)], s); }
+
+const char *history_current(const History *h) { return h->what[slot(h, h->at)]; }
+
 const char *history_undo(History *h, Song *s)
 {
 	if (h->at <= 0)

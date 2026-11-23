@@ -1,0 +1,22 @@
+# editing: chords inserted from the palette, drum hits, undo, an export from the UI
+cmd side chords
+cmd chord D
+cmd seek 1
+key return
+expect-status Inserted D
+key ctrl+z
+expect-status Undo: insert D
+key ctrl+y
+expect-status Redo: insert D
+cmd track 0
+# a kick on beat 3 of bar 1 (the drum grid)
+click 900 856
+cmd side tracks
+cmd add-guitar
+cmd delete-track
+expect-status Deleted track
+shot OUT/edit_01.png
+cmd export-to OUT/edit.opus
+cmd wait-export
+wait 2
+expect-status Exported

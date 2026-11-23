@@ -52,7 +52,8 @@ add_custom_target(shaders DEPENDS ${SPV_HEADERS})
 
 # --- the core: score, synth, guitars, chords, composer, projects, export ----
 # (no window, no GPU, no audio device: tested headlessly, used by the CLI)
-add_library(ft_core STATIC src/song.c src/composer.c src/synth.c src/guitar.c src/chords.c src/autogen.c src/presets.c src/project.c src/export.c)
+add_library(ft_core STATIC src/song.c src/synth.c src/guitar.c src/chords.c src/composer.c src/autogen.c src/presets.c
+  src/project.c src/export.c)
 target_include_directories(ft_core PUBLIC src)
 target_include_directories(ft_core PRIVATE ${LAME_INCLUDE})
 target_link_libraries(ft_core PUBLIC PkgConfig::OPUS PkgConfig::OGG ${LAME_LIB} m)
@@ -66,11 +67,10 @@ target_compile_options(ft2002-cli PRIVATE ${FT_WARN})
 
 # --- the workbench: window, Vulkan, fonts, widgets (the UI layer is vxide's) --
 add_executable(ft2002 src/main.c src/base.c src/gpu.c src/font.c src/draw.c src/icons.c src/theme.c src/menu.c
-  src/ui.c
-  src/views.c src/app.c)
+  src/ui.c src/views.c src/editors.c src/app.c src/audio.c)
 add_dependencies(ft2002 shaders)
 target_include_directories(ft2002 PRIVATE src ${SHADER_OUT} ${stb_SOURCE_DIR})
-target_link_libraries(ft2002 PRIVATE Vulkan::Vulkan SDL3::SDL3 PkgConfig::FREETYPE Threads::Threads m)
+target_link_libraries(ft2002 PRIVATE ft_core Vulkan::Vulkan SDL3::SDL3 PkgConfig::FREETYPE Threads::Threads m)
 target_compile_options(ft2002 PRIVATE ${FT_WARN})
 
 # --- tests ------------------------------------------------------------------
@@ -82,5 +82,6 @@ if(BUILD_TESTING)
     add_test(NAME ${t} COMMAND test_${t})
   endforeach()
   # the headless workbench needs a Vulkan device (GPU or lavapipe)
-  add_test(NAME ui_shot COMMAND ft2002 --headless 1280x800 --shot ${CMAKE_CURRENT_BINARY_DIR}/ui_shot.png)
+  add_test(NAME ui COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/tests/t_ui.sh)
+  set_tests_properties(ui PROPERTIES ENVIRONMENT "FT2002=$<TARGET_FILE:ft2002>" TIMEOUT 300)
 endif()

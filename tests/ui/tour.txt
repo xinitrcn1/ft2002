@@ -1,0 +1,25 @@
+# a tour of the views; screenshots go to $OUT (t_ui.sh)
+cmd side chords
+cmd chord G
+wait 2
+shot OUT/01_chords.png
+cmd seek 2
+key return
+expect-status Inserted G
+cmd side generate
+cmd seed 2327
+cmd band rock
+cmd mood wartime
+cmd generate
+expect-status Generated
+shot OUT/02_generated.png
+cmd side instrument
+cmd track 7
+shot OUT/03_instrument.png
+cmd side mixer
+shot OUT/04_mixer.png
+cmd track 0
+cmd side export
+shot OUT/05_export.png
+cmd undo
+expect-status Undo
