@@ -48,7 +48,7 @@ add_custom_target(shaders DEPENDS ${SPV_HEADERS})
 
 # --- the core: score, synth, guitars, chords, composer, projects, export ----
 # (no window, no GPU, no audio device: tested headlessly, used by the CLI)
-add_library(ft_core STATIC src/song.c src/composer.c)
+add_library(ft_core STATIC src/song.c src/composer.c src/chords.c)
 target_include_directories(ft_core PUBLIC src)
 target_link_libraries(ft_core PUBLIC m)
 target_compile_options(ft_core PRIVATE ${FT_WARN})
@@ -65,7 +65,7 @@ target_compile_options(ft2002 PRIVATE ${FT_WARN})
 # --- tests ------------------------------------------------------------------
 include(CTest)
 if(BUILD_TESTING)
-  foreach(t composer)
+  foreach(t composer chords)
     add_executable(test_${t} tests/test_${t}.c)
     target_link_libraries(test_${t} PRIVATE ft_core)
     add_test(NAME ${t} COMMAND test_${t})
