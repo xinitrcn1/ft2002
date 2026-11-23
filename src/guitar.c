@@ -138,7 +138,7 @@ void gtr_init(GuitarState *g, float sr)
 	g->hand = 3.0f;
 	g->noise = 0x2545F491u;
 	for (int i = 0; i < GTR_STRINGS; i++)
-		g->s[i].pending = -1;
+		g->s[i].pending = -1, g->s[i].scale = 1.0f;
 }
 
 void gtr_reset(GuitarState *g)
@@ -215,11 +215,18 @@ static void pluck(GuitarState *g, const Patch *p, GtrString *s, int note, u8 art
 		period = 4.0f;
 	float a = loop_lp(p, art, f0);
 	bool legato = art == ART_HAMMER && s->active && s->amp > 1e-3f;
-	if (!legato) {
-		/* the pick meets the string: most of the old vibration stops */
+	/* fold the last ramp into the line (no change to what sounds) */
+	if (s->scale != 1.0f && s->scale != 0.0f)
 		for (u32 i = 0; i < GTR_LINE; i++)
-			s->buf[i] *= 0.15f;
-	}
+			s->buf[i] *= s->scale;
+	s->scale = 1.0f;
+	/* the pick meets the string: most of the old vibration stops, over 3 ms
+	 * (at once it was a click on every re-struck string); a hammer-on
+	 * instead feeds the vibration a little */
+	const float ramp_s = 0.003f;
+	s->scale_n = (u32)(ramp_s * g->sr);
+	s->scale_mul = powf(legato ? 1.15f : 0.15f, 1.0f / (float)s->scale_n);
+	s->exc_wait = legato ? 0 : s->scale_n;
 	s->active = true;
 	s->held = true;
 	s->note = (u8)note;
@@ -233,6 +240,12 @@ static void pluck(GuitarState *g, const Patch *p, GtrString *s, int note, u8 art
 	s->amp = 1.0f;
 	set_pitch(s, period, a);
 	s->gain = loop_gain(f0, t60_for(p, f0, art), a, g->sr);
+	s->gain_to = s->gain;
+	s->lp_to = a;
+	{
+		float w = 2.0f * PI / period;
+		s->comp = atan2f(a * sinf(w), 1.0f - a * cosf(w)) / w;
+	}
 	s->damp_to = art == ART_STACCATO ? 0.02f : art == ART_PALM ? 0.05f : 0.09f;
 
 	/* the excitation: one period */
@@ -279,13 +292,14 @@ static void pluck(GuitarState *g, const Patch *p, GtrString *s, int note, u8 art
 		n = n / 3 + 1, lvl *= 0.6f;
 	for (u32 i = 0; i < n; i++)
 		e[i] *= lvl;
+	/* the pick's edge: a 0.5 ms raised-cosine fade-in (a step into the
+	 * loop would click) */
+	u32 fade = (u32)(0.0005f * g->sr);
+	for (u32 i = 0; i < fade && i < n; i++)
+		e[i] *= 0.5f - 0.5f * cosf(PI * (float)i / (float)fade);
 	s->exc_len = legato ? 0 : n;
 	s->exc_at = 0;
-	if (legato) {
-		/* a hammer-on keeps the vibration and only gets a nudge */
-		for (u32 i = 0; i < GTR_LINE; i++)
-			s->buf[i] *= 1.15f;
-	}
+
 }
 
 void gtr_trigger(GuitarState *g, const Patch *p, const NoteEvent *e, float vel, float len_s)
@@ -378,8 +392,8 @@ static void release_string(GuitarState *g, GtrString *s, bool fast)
 	s->held = false;
 	float f0 = g->sr / s->period;
 	float t = fast ? 0.01f : s->damp_to;
-	s->lp_coef = s->lp_coef < 0.5f ? 0.5f : s->lp_coef;
-	s->gain = loop_gain(f0, t, s->lp_coef, g->sr);
+	s->lp_to = s->lp_coef < 0.5f ? 0.5f : s->lp_coef;
+	s->gain_to = loop_gain(f0, t, s->lp_to, g->sr);
 }
 
 void gtr_release(GuitarState *g, const Patch *p, bool fast)
@@ -444,21 +458,30 @@ static float string_step(GuitarState *g, const Patch *p, GtrString *s, bool cont
 		if (s->art == ART_FEEDBACK && s->held && s->age > 0.8f)
 			s->bloom = fminf(1.0f, s->bloom + 16.0f * g->inv_sr * 0.35f);
 	}
-	/* the loop low-pass delays the wave too: its phase delay at the pitch */
-	float w = 2.0f * PI / s->period;
-	float comp = atan2f(s->lp_coef * sinf(w), 1.0f - s->lp_coef * cosf(w)) / w;
-	float d = s->period - comp;
+	/* note-off: gain and brightness glide (~2 ms) instead of stepping */
+	s->gain += (s->gain_to - s->gain) * 0.01f;
+	s->lp_coef += (s->lp_to - s->lp_coef) * 0.01f;
+	/* the loop low-pass delays the wave too: its phase delay at the struck
+	 * pitch, fixed for the note (recomputed per sample, a filter change
+	 * would move the read point and click) */
+	float d = s->period - s->comp * (s->period / s->base_period);
 	if (d < 2.0f)
 		d = 2.0f;
-	float x = read_frac(s->buf, s->pos, d);
+	if (s->scale_n) {
+		s->scale *= s->scale_mul;
+		s->scale_n--;
+	}
+	float x = read_frac(s->buf, s->pos, d) * s->scale;
 	s->lp = (1.0f - s->lp_coef) * x + s->lp_coef * s->lp;
 	float y = s->lp * s->gain;
 	if (s->art == ART_FEEDBACK && s->held)
 		y = tanhf(y * 1.02f); /* endless: the loop gain sits above 1, bounded */
 	float in = y;
-	if (s->exc_at < s->exc_len)
+	if (s->exc_wait)
+		s->exc_wait--;
+	else if (s->exc_at < s->exc_len)
 		in += s->exc_buf[s->exc_at++];
-	s->buf[s->pos] = in;
+	s->buf[s->pos] = in / s->scale;
 	s->pos = (s->pos + 1) & (GTR_LINE - 1);
 	s->age += g->inv_sr;
 
@@ -467,7 +490,7 @@ static float string_step(GuitarState *g, const Patch *p, GtrString *s, bool cont
 	if (m->pickup > 0) {
 		/* a magnetic pickup: the string seen at a point, a comb on the output */
 		float pd = s->base_period * m->pickup;
-		raw -= read_frac(s->buf, s->pos, pd < 2.0f ? 2.0f : pd);
+		raw -= read_frac(s->buf, s->pos, pd < 2.0f ? 2.0f : pd) * s->scale;
 	}
 	/* DC blocker on the way out (in the loop its phase would detune the string) */
 	float out = raw - s->dc_x + 0.999f * s->dc_y;
@@ -482,8 +505,10 @@ static float string_step(GuitarState *g, const Patch *p, GtrString *s, bool cont
 	}
 	/* stop a string that has died away */
 	s->amp = s->amp * 0.9995f + fabsf(in) * 0.0005f;
-	if (s->exc_at >= s->exc_len && s->amp < 2e-5f && s->age > 0.05f) {
+	if (s->exc_at >= s->exc_len && !s->exc_wait && s->amp < 2e-5f && s->age > 0.05f) {
 		s->active = false;
+		s->scale = 1.0f;
+		s->scale_n = 0;
 		memset(s->buf, 0, sizeof s->buf);
 		s->lp = s->dc_x = s->dc_y = 0;
 	}

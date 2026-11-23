@@ -3,7 +3,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <SDL3/SDL.h>
+#if defined(__SSE__) || defined(__x86_64__)
+#include <xmmintrin.h>
+#endif
 
 struct Audio {
 	SDL_AudioStream *stream;
@@ -11,13 +15,28 @@ struct Audio {
 	int rate;
 	char name[128];
 	u64 last_ns;
+	int period;      /* the device's buffer, frames */
+	bool ftz;
 	float scratch[1024 * 2];
 };
+
+/* Decaying filters and reverb tails reach denormal floats, which are slow
+ * on x86: the audio thread flushes them to zero (set once, per thread). */
+void audio_flush_denormals(void)
+{
+#if defined(__SSE__) || defined(__x86_64__)
+	_mm_setcsr(_mm_getcsr() | 0x8040); /* FTZ | DAZ */
+#endif
+}
 
 static void SDLCALL feed(void *user, SDL_AudioStream *stream, int additional, int total)
 {
 	(void)total;
 	Audio *a = user;
+	if (!a->ftz) {
+		audio_flush_denormals();
+		a->ftz = true;
+	}
 	int frames = additional / (int)(2 * sizeof(float));
 	while (frames > 0) {
 		int n = frames < 1024 ? frames : 1024;
@@ -36,12 +55,29 @@ Audio *audio_open(bool device)
 	snprintf(a->name, sizeof a->name, "no audio device");
 	if (device && SDL_InitSubSystem(SDL_INIT_AUDIO)) {
 		SDL_AudioSpec spec = {.format = SDL_AUDIO_F32, .channels = 2, .freq = 48000};
-		/* small buffers: the chord palette should answer at once */
-		SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, "512");
+		/* The device buffer. 512 frames (10.7 ms) crackled: on FreeBSD's OSS
+		 * ("dsp") the callback arrives 5-10 ms late and the driver holds two
+		 * fragments; measured with sndctl's xruns over a rock song (work/clicks/
+		 * live.sh): 512 frames 112 underruns in 11 s, 1024 none in 82 s.
+		 * Rendering a period ahead into the stream made it worse (51 at 1024).
+		 * FT_AUDIO_FRAMES overrides. */
+		int frames = 1024;
+		const char *env = getenv("FT_AUDIO_FRAMES");
+		if (env && atoi(env) >= 64 && atoi(env) <= 16384)
+			frames = atoi(env);
+		char hint[16];
+		snprintf(hint, sizeof hint, "%d", frames);
+		SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, hint);
+		a->period = frames;
 		a->stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, feed, a);
 		if (a->stream) {
+			SDL_AudioSpec dev;
+			int sf = 0;
+			if (SDL_GetAudioDeviceFormat(SDL_GetAudioStreamDevice(a->stream), &dev, &sf) && sf > 0)
+				a->period = sf;
 			const char *dn = SDL_GetAudioDeviceName(SDL_GetAudioStreamDevice(a->stream));
-			snprintf(a->name, sizeof a->name, "%s (%s)", dn ? dn : "audio", SDL_GetCurrentAudioDriver());
+			snprintf(a->name, sizeof a->name, "%s (%s, %d frames, %.0f ms)", dn ? dn : "audio", SDL_GetCurrentAudioDriver(),
+			         a->period, a->period * 1000.0 / 48000.0);
 		} else {
 			fprintf(stderr, "ft2002: no audio: %s\n", SDL_GetError());
 		}

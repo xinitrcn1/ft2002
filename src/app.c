@@ -676,6 +676,7 @@ typedef struct {
 static void *export_main(void *arg)
 {
 	ExportJob *j = arg;
+	audio_flush_denormals();
 	bool ok = export_song(&j->song, j->path, &j->opt, &st.exp_report, st.exp_err, sizeof st.exp_err, &st.exp_progress,
 	                      &st.exp_cancel);
 	song_free(&j->song);

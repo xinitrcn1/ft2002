@@ -20,5 +20,7 @@ Player *audio_player(Audio *a); /* touch only under audio_lock */
 /* No device: render the time since the last call (keeps meters and the
  * playhead moving). With a device: nothing. */
 void audio_pump(Audio *a);
+/* flush-to-zero / denormals-are-zero for the calling thread (x86) */
+void audio_flush_denormals(void);
 
 #endif

@@ -31,9 +31,16 @@ typedef struct {
 	float lp;                   /* loop low-pass state */
 	float lp_coef;              /* 0 bright .. 1 dark */
 	float gain;                 /* loop gain per period */
+	float gain_to, lp_to;       /* where gain and lp_coef glide (note-off: no step) */
+	float comp;                 /* the loop filter's phase delay at the struck pitch */
 	float dc_x, dc_y;
 	float exc_buf[GTR_LINE];
 	u32 exc_len, exc_at;
+	u32 exc_wait;               /* samples before the excitation goes in (the pick's contact) */
+	/* the pick's contact damps the old vibration over a few ms, not at once:
+	 * the line holds values / scale, and scale ramps (folded in at the next pluck) */
+	float scale, scale_mul;
+	u32 scale_n;
 	float amp;                  /* smoothed level (for stopping idle strings) */
 	bool active;
 	u8 note, art;

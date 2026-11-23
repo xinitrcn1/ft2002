@@ -37,3 +37,36 @@ is atomic to the player; edits copy a few bytes, so the lock is short.
 Without a device (headless runs, `--headless`), `audio_pump` renders the
 wall-clock time since the last frame into a scratch buffer, so the
 playhead and meters still move and previews still run.
+
+## Crackling (fixed)
+
+Live playback crackled. The cause was the device buffer, not the DSP:
+SDL3 on FreeBSD uses OSS (`dsp`), which keeps two fragments, and the
+callback arrives 5–10 ms late on a busy system (measured: the gap
+between callbacks reached 20 ms with a 10.7 ms period and an empty
+callback). With 512-frame buffers that underran ~10 times a second.
+
+`work/clicks/live.sh` plays a generated rock song on the real device
+with UI-like lock traffic and reads the channel's `xruns` from `sndctl`:
+
+| device buffer | rendered ahead | underruns |
+|---|---|---|
+| 512 (10.7 ms) | 0 | 112 in 11 s |
+| 512 | 512 | 262 in 11 s |
+| 1024 (21.3 ms) | 0 | 0 in 82 s (4 runs) |
+| 1024 | 1024 | 51 in 11 s |
+| 2048 (42.7 ms) | 0 | 10 in 30 s once, then 0, 0 in 20 s runs |
+
+So: 1024 frames, nothing rendered ahead (`FT_AUDIO_FRAMES` overrides).
+The player needs 1.85 ms per 21.3 ms block on average (2.8 ms worst,
+`work/clicks/clicks.c timing`), so CPU was never the limit.
+
+Smaller things found on the way:
+- the audio and export threads flush denormals to zero (late reverb and
+  string tails doubled the block time without it: 0.34 vs 0.16 ms);
+- a string's note-off stepped its loop filter and gain, which moved the
+  read point: an audible click per string at every chord change. Now the
+  delay compensation is fixed per note and gain / brightness glide over
+  ~2 ms;
+- the pick damps the old vibration over 3 ms (it was a single-sample
+  drop to 15 %), and the excitation starts with a 0.5 ms fade-in.
