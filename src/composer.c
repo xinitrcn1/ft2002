@@ -258,6 +258,81 @@ typedef struct {
 	int v[8];
 	int n;
 } ArpOrder;
+/* --- FT2002's variations (compose_ex with variations on) ----------------------
+ * Drawn from their own generator after geosim's choices, so compose() still
+ * writes geosim's songs and a seed keeps its form, groove and sounds. */
+
+/* more four-chord progressions, same rules as the table above (no
+ * diminished chords uncoloured; coloured ones major or minor locally) */
+static const Progression progressions_ex[] = {
+	{BIT(M_IONIAN), {0, 2, 3, 4}},                    /* I iii IV V */
+	{BIT(M_IONIAN), {0, 3, 4, 3}},                    /* I IV V IV */
+	{BIT(M_IONIAN), {0, 1, 3, 4}},                    /* I ii IV V */
+	{BIT(M_IONIAN), {3, 4, 2, 5}},                    /* IV V iii vi (royal road) */
+	{BIT(M_IONIAN), {1, 4, 0, 5}},                    /* ii V I vi */
+	{BIT(M_IONIAN), {0, 5, 1, 4}},                    /* I vi ii V (doo-wop) */
+	{BIT(M_IONIAN), {3, 0, 4, 5}},                    /* IV I V vi */
+	{BIT(M_IONIAN), {0, 2, 5, 3}},                    /* I iii vi IV */
+	{BIT(M_IONIAN), {5, 4, 3, 4}},                    /* vi V IV V */
+	{BIT(M_IONIAN) | BIT(M_MIXOLYDIAN), {0, 4, 3, 0}}, /* I V IV I (v in mixolydian) */
+	{BIT(M_MIXOLYDIAN), {0, 3, 6, 3}},                /* I IV bVII IV */
+	{BIT(M_MIXOLYDIAN), {0, 6, 3, 3}},                /* I bVII IV IV */
+	{BIT(M_LYDIAN), {0, 1, 2, 1}},                    /* I II iii II */
+	{BIT(M_LYDIAN), {0, 4, 1, 0}},                    /* I V II I */
+	{BIT(M_AEOLIAN), {0, 5, 6, 4}},                   /* i VI VII v */
+	{BIT(M_AEOLIAN), {0, 3, 4, 0}},                   /* i iv v i */
+	{BIT(M_AEOLIAN), {0, 6, 5, 4}},                   /* i VII VI v */
+	{BIT(M_AEOLIAN), {0, 4, 5, 3}},                   /* i v VI iv */
+	{BIT(M_AEOLIAN), {5, 3, 0, 6}},                   /* VI iv i VII */
+	{BIT(M_AEOLIAN), {0, 3, 5, 6}},                   /* i iv VI VII */
+	{BIT(M_AEOLIAN) | BIT(M_DORIAN), {0, 6, 0, 3}},   /* i VII i iv (IV in dorian) */
+	{BIT(M_DORIAN), {0, 1, 0, 3}},                    /* i ii i IV */
+	{BIT(M_DORIAN), {0, 2, 3, 0}},                    /* i III IV i */
+	{BIT(M_DORIAN), {0, 4, 3, 0}},                    /* i v IV i */
+	{BIT(M_PHRYGIAN), {0, 1, 2, 1}},                  /* i bII bIII bII */
+	{BIT(M_PHRYGIAN), {0, 6, 5, 1}},                  /* i bVII bVI bII */
+	{BIT(M_HARMONIC), {0, 3, 4, 5}},                  /* i iv V VI */
+	{BIT(M_HARMONIC), {0, 4, 5, 4}},                  /* i V VI V */
+	/* borrowed */
+	{BIT(M_IONIAN) | BIT(M_MIXOLYDIAN), {0, 2, 3, 0}, {C_HOME, C_MINOR, C_HOME, C_HOME}}, /* I bIII IV I */
+	{BIT(M_IONIAN), {0, 5, 3, 0}, {C_HOME, C_MINOR, C_HOME, C_HOME}},                    /* I bVI IV I */
+	{BIT(M_IONIAN), {3, 3, 0, 4}, {C_HOME, C_MINOR, C_HOME, C_HOME}},                    /* IV iv I V */
+	{BIT(M_IONIAN) | BIT(M_LYDIAN), {0, 5, 3, 2}, {C_HOME, C_HOME, C_HOME, C_MED3}},     /* I vi IV III */
+	{BIT(M_AEOLIAN), {0, 3, 4, 5}, {C_HOME, C_HOME, C_HARM, C_HOME}},                    /* i iv V VI */
+	{BIT(M_AEOLIAN) | BIT(M_HARMONIC), {0, 1, 4, 0}, {C_HOME, C_PHRYG, C_HARM, C_HOME}}, /* i bII V i (neapolitan) */
+	{BIT(M_AEOLIAN), {0, 3, 0, 6}, {C_HOME, C_DORIAN, C_HOME, C_HOME}},                  /* i IV i VII */
+	{BIT(M_AEOLIAN), {5, 6, 0, 4}, {C_HOME, C_HOME, C_HOME, C_HARM}},                    /* VI VII i V */
+	/* relative-key centred */
+	{BIT(M_IONIAN), {5, 4, 3, 2}, {0}, true},                     /* vi V IV iii */
+	{BIT(M_IONIAN) | BIT(M_MIXOLYDIAN), {1, 5, 3, 4}, {0}, true}, /* ii vi IV V */
+	{BIT(M_AEOLIAN), {2, 6, 5, 6}, {0}, true},                    /* III VII VI VII */
+	{BIT(M_AEOLIAN) | BIT(M_DORIAN), {2, 3, 6, 2}, {0}, true},    /* III iv VII III */
+};
+
+/* more arpeggio orders: Alberti, pedals under a moving voice, cascades, rolls */
+constexpr int arp_order_ex_count = 14;
+static const int arp_order_ex_table[arp_order_ex_count][8] = {
+	{0, 2, 1, 2, -1},          {0, 3, 1, 3, 2, 3, 1, 3}, {0, 1, 0, 2, 0, 3, 0, 2}, {3, 0, 2, 0, 1, 0, 2, 0},
+	{0, 1, 2, 3, 4, 5, 4, 3}, {5, 4, 3, 2, 1, 0, -1},   {0, 2, 5, 3, 1, 4, -1},    {2, 1, 0, 1, 2, 3, 4, 3},
+	{0, 4, 2, 5, 3, 1, -1},    {1, 2, 3, 4, 5, 3, -1},   {0, 0, 2, 3, 0, 0, 2, 4}, {3, 2, 3, 1, 3, 0, 3, 1},
+	{0, 2, 4, 2, 3, 1, 3, 2}, {4, 3, 2, 3, 4, 5, 4, 2}};
+/* more wide cells */
+constexpr int wide_cell_ex_count = 6;
+static const int wide_cell_ex_table[wide_cell_ex_count][4] = {{7, 2, 4, 9}, {4, 7, 11, 9}, {0, 4, 7, 11},
+                                                              {14, 11, 9, 7}, {9, 2, 11, 4}, {7, 4, 9, 2}};
+/* arp rhythms over a bar of 16ths (bit r = row r; for 16th-rate arps) */
+constexpr int arp_rhythm_count = 8;
+static const u16 arp_rhythm_table[arp_rhythm_count] = {
+	0xFFFF, /* every 16th */
+	0x4949, /* 3-3-2 pushes: x..x..x. */
+	0xDDDD, /* gallop: x.xx */
+	0xBBBB, /* xx.x */
+	0x6D6D, /* syncopated: x.xx.xx. */
+	0x5555, /* 8ths, on the beat side */
+	0x7F7F, /* a breath before each half bar */
+	0xEEEE, /* .xxx: off the beat */
+};
+
 
 static ArpOrder arp_order_of(int i)
 {
@@ -370,6 +445,9 @@ typedef struct {
 	/* arp variation (orders per section class, inversions, octave shifts, passing
 	 * tones, wide cells): its own generator, so every other draw stays the same */
 	Rng ar;
+	Rng vr;        /* compose_ex variations: their own stream */
+	bool vars;
+	u16 arp_mask[3]; /* per section class: which 16ths a 16th-rate arp plays (all: 0xFFFF) */
 	Rng *jit;        /* the generator of add()'s velocity jitter (the solo's own while it renders) */
 	bool war;        /* the club arrangement (wartime hardtrance, frustrated hardstyle) */
 	bool low_lead;   /* wartime: the low, bass-like lead */
@@ -458,6 +536,8 @@ static void composer_init(Composer *c, Song *s, u64 seed, Mood m, bool force_sol
 	c->tr = rng_make(seed ^ 0xA54FF53A5F1D36F1ull);
 	c->sr = rng_make(seed ^ 0x510E527FADE682D1ull);
 	c->ar = rng_make(seed ^ 0x9B05688C2B3E6C1Full);
+	c->vr = rng_make(seed ^ 0x1F83D9ABFB41BD6Bull);
+	c->arp_mask[0] = c->arp_mask[1] = c->arp_mask[2] = 0xFFFF;
 	c->jit = &c->r;
 	c->force_solo = force_solo;
 	c->style = ST_TECHNO;
@@ -2702,9 +2782,11 @@ static void place_arp(Composer *c, const PlanItem *p, int bi, int bars, int star
 	const int len = order->n;
 	const int rot = p->variant > 0 ? 1 : 0; /* a repeated section starts the order elsewhere */
 	int idx = 0;
+	const u16 mask = c->arp_rate == 1 ? c->arp_mask[arp_class(p->sec.kind)] : 0xFFFF;
 	for(int pos = start_row;; pos += c->arp_rate) {
 		const int b = bi + pos / 16, row = pos % 16;
 		if(b >= bi + bars || b >= nb) break;
+		if(!((mask >> row) & 1u)) continue; /* a variation's rhythm rests here */
 		const int k = b - bi;
 		const int root = chord_at(c, p, b);
 		int tone = order->v[(idx + rot + (evolve ? k / 2 : 0)) % len];
@@ -3264,8 +3346,55 @@ static void describe(Composer *c)
 	str_add(&d, "; transitions: %s", c->ntransitions ? c->transitions : "none");
 }
 
+/* FT2002's variations: progressions and arpeggios from the extended tables
+ * (each choice of geosim's has an even chance to be swapped), arp rhythms
+ * per section class. All from c->vr, after geosim's own draws. */
+static void vary_progressions(Composer *c)
+{
+	Rng *v = &c->vr;
+	const Progression *fit[countof(progressions_ex)], *pivot[countof(progressions_ex)];
+	int nfit = 0, npivot = 0;
+	for(size_t i = 0; i < countof(progressions_ex); ++i) {
+		const Progression *p = &progressions_ex[i];
+		if(!(p->mode_mask & BIT(c->s->mode))) continue;
+		if(p->pivot) pivot[npivot++] = p;
+		else fit[nfit++] = p;
+	}
+	if(nfit && rng_chance(v, 0.5f)) c->prog_a = fit[rng_next(v) % (u64)nfit];
+	if(nfit && rng_chance(v, 0.5f)) {
+		const Progression *b = fit[rng_next(v) % (u64)nfit];
+		if(b != c->prog_a) c->prog_b = b;
+	}
+	if(npivot && rng_chance(v, 0.4f)) c->prog_c = pivot[rng_next(v) % (u64)npivot];
+	else if(nfit && rng_chance(v, 0.3f)) c->prog_c = fit[rng_next(v) % (u64)nfit];
+}
+
+static ArpOrder arp_order_ex_of(int i)
+{
+	ArpOrder o = {0};
+	for(int j = 0; j < 8; ++j) {
+		if(arp_order_ex_table[i][j] < 0) break;
+		o.v[o.n++] = arp_order_ex_table[i][j];
+	}
+	return o;
+}
+
+static void vary_arps(Composer *c)
+{
+	Rng *v = &c->vr;
+	for(int k = 0; k < 3; ++k)
+		if(rng_chance(v, 0.55f)) c->arp_orders[k] = arp_order_ex_of((int)(rng_next(v) % arp_order_ex_count));
+	c->arp_order = c->arp_orders[0];
+	for(int k = 0; k < 2; ++k)
+		if(rng_chance(v, 0.5f)) memcpy(c->wide_cells[k], wide_cell_ex_table[rng_next(v) % wide_cell_ex_count], sizeof c->wide_cells[k]);
+	/* rhythms: verses and bridges sometimes, choruses more often (calm: rarely) */
+	const float p = c->s->mood == MOOD_CALM ? 0.2f : 0.45f;
+	for(int k = 0; k < 3; ++k)
+		if(rng_chance(v, k == 1 ? p + 0.15f : p)) c->arp_mask[k] = arp_rhythm_table[1 + rng_next(v) % (arp_rhythm_count - 1)];
+}
+
 /* --- the pipeline ------------------------------------------------------------------ */
-static bool run(Song *out, u64 seed, Mood m, bool force_solo)
+static bool run(Song *out, u64 seed, Mood m, bool force_solo, bool vars)
 {
 	song_init(out);
 	out->ntracks = CH_COUNT;
@@ -3273,11 +3402,14 @@ static bool run(Song *out, u64 seed, Mood m, bool force_solo)
 	Composer *c = malloc(sizeof *c);
 	if(!c) return false;
 	composer_init(c, out, seed, m, force_solo);
+	c->vars = vars;
 	choose_style(c);
 	choose_basics(c);
+	if(vars) vary_progressions(c);
 	choose_instruments(c);
 	choose_groove(c);
 	choose_arp_variation(c);
+	if(vars) vary_arps(c);
 	choose_form(c);
 	choose_arrangement(c);
 	insert_arp_solo(c);
@@ -3301,19 +3433,21 @@ static bool run(Song *out, u64 seed, Mood m, bool force_solo)
 	return ok;
 }
 
-bool compose(Song *out, u64 seed, Mood m) { return run(out, seed, m, false); }
+bool compose(Song *out, u64 seed, Mood m) { return run(out, seed, m, false, false); }
+
+bool compose_ex(Song *out, u64 seed, Mood m, const ComposeOptions *o) { return run(out, seed, m, false, o && o->variations); }
 
 bool compose_menu(Song *out, u64 seed)
 {
 	/* A wartime song with an arp solo; songs whose form leaves no room for one
 	 * (intermissions, a key change at the spot) pass to the next seed. */
 	for(int k = 0; k < 32; ++k) {
-		if(!run(out, seed, MOOD_WARTIME, true)) return false;
+		if(!run(out, seed, MOOD_WARTIME, true, false)) return false;
 		for(u32 i = 0; i < out->nsections; ++i) {
 			if(out->sections[i].kind == SEC_ARP_SOLO) return true;
 		}
 		song_free(out);
 		seed = next_seed(seed);
 	}
-	return run(out, seed, MOOD_WARTIME, true);
+	return run(out, seed, MOOD_WARTIME, true, false);
 }

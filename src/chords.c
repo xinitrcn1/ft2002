@@ -354,6 +354,29 @@ const StrumPattern strum_patterns[] = {
     {"Travis pinch", "fingerstyle", "P.3.A.4.B.3.A.4.", ART_RING, 0},
     {"Ballad picking", "fingerstyle", "B.2.3.4.A.2.3.4.", ART_RING, 0},
     {"Bass + strum", "folk", "B...d.u.A...d.u.", ART_NORMAL, 8},
+    /* more strums */
+    {"Calypso", "pop", "D.DU.UDU", ART_NORMAL, 8},
+    {"Push 3-3-2", "rock", "D..D..D.D..D..D.", ART_NORMAL, 7},
+    {"Half-time", "ballad", "D.......D...U.d.", ART_RING, 11},
+    {"Offbeat pushes", "pop", "D.....d...d..ud.", ART_NORMAL, 8},
+    {"Disco scratch", "funk", "xDxuxDxuxDxuxDxu", ART_STACCATO, 5},
+    {"Waltz feel", "folk", "B...d...d...A...", ART_NORMAL, 9},
+    {"Chug + accent", "metal", "HhhhD...HhhhD...", ART_PALM, 3},
+    {"Punk 16ths", "punk", "DdddDdddDdddDddd", ART_NORMAL, 4},
+    {"Stop-time", "rock", "D.......D.....D.", ART_STACCATO, 6},
+    /* more picking: arpeggios and rolls */
+    {"Arpeggio down", "fingerstyle", "5.4.3.2.1.0.1.2.", ART_RING, 0},
+    {"Arpeggio up-down 16ths", "fingerstyle", "0123454321012345", ART_RING, 0},
+    {"Pima", "fingerstyle", "B.3.4.5.A.3.4.5.", ART_RING, 0},
+    {"Outside-in", "fingerstyle", "0.5.1.4.2.3.1.4.", ART_RING, 0},
+    {"Forward roll", "fingerstyle", "0.3.5.0.3.5.0.3.", ART_RING, 0},
+    {"Backward roll", "fingerstyle", "5.3.0.5.3.0.5.3.", ART_RING, 0},
+    {"Root-fifth picks", "fingerstyle", "0.2.4.2.0.2.4.2.", ART_RING, 0},
+    {"Syncopated picking", "fingerstyle", "0..3..4.5..3..4.", ART_RING, 0},
+    {"Cascade 16ths", "fingerstyle", "5432104354321043", ART_RING, 0},
+    {"Pedal arpeggio", "fingerstyle", "0.4.0.5.0.4.0.3.", ART_RING, 0},
+    {"Pinch + roll", "fingerstyle", "P.2.3.4.P.4.3.2.", ART_RING, 0},
+    {"Muted arpeggio", "rock", "0.1.2.3.0.1.2.3.", ART_PALM, 0},
 };
 const int strum_pattern_count = (int)(sizeof strum_patterns / sizeof strum_patterns[0]);
 
@@ -397,6 +420,31 @@ static void add_pick(Song *s, int ch, u32 tick, u32 len, int note, int string, u
 int strum_write(Song *s, int ch, u32 t0, u32 ticks, const u8 notes[6], int strings, const StrumPattern *p, u8 vel,
                 u8 art, bool ring)
 {
+	return strum_write_ex(s, ch, t0, ticks, notes, strings, p, vel, art, ring, true);
+}
+
+/* what a chord change landing on a rest plays: the pattern's own first
+ * kind of hit (a down strum, the bass, the lowest picked string, a chug) */
+static char attack_of(const char *code)
+{
+	for (const char *c = code; *c; c++)
+		if (*c == 'D' || *c == 'd')
+			return 'd';
+	for (const char *c = code; *c; c++)
+		if (*c == 'B' || *c == 'P')
+			return 'B';
+	for (const char *c = code; *c; c++)
+		if (*c >= '0' && *c <= '5')
+			return '0';
+	for (const char *c = code; *c; c++)
+		if (*c == 'H' || *c == 'h')
+			return 'h';
+	return 'd';
+}
+
+int strum_write_ex(Song *s, int ch, u32 t0, u32 ticks, const u8 notes[6], int strings, const StrumPattern *p, u8 vel,
+                   u8 art, bool ring, bool attack_first)
+{
 	int sounding[6], ns = 0;
 	for (int k = 0; k < strings && k < 6; k++)
 		if (notes[k])
@@ -409,14 +457,20 @@ int strum_write(Song *s, int ch, u32 t0, u32 ticks, const u8 notes[6], int strin
 	int added = 0;
 	u32 step_ticks = (u32)ticks_per_row;
 	u32 nsteps = (ticks + step_ticks - 1) / step_ticks;
+	/* the pattern is locked to the bar: step k of the call is the song's
+	 * 16th (t0 / 6 + k), so a chord change mid-bar keeps the groove */
+	u32 s0 = t0 / step_ticks;
+#define STEP(k) code[(s0 + (k)) % (u32)steps]
 	for (u32 k = 0; k < nsteps; k++) {
-		char c = code[k % (u32)steps];
+		char c = STEP(k);
+		if (c == '.' && k == 0 && attack_first)
+			c = attack_of(code);
 		if (c == '.')
 			continue;
 		u32 tick = t0 + k * step_ticks;
 		/* length: to the next step that sounds (or the end) */
 		u32 next = k + 1;
-		while (next < nsteps && code[next % (u32)steps] == '.')
+		while (next < nsteps && STEP(next) == '.')
 			next++;
 		u32 len = (next - k) * step_ticks;
 		if (next >= nsteps || ring)
@@ -481,4 +535,5 @@ int strum_write(Song *s, int ch, u32 t0, u32 ticks, const u8 notes[6], int strin
 		}
 	}
 	return added;
+#undef STEP
 }

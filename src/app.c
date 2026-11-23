@@ -151,7 +151,7 @@ bool app_start(const char *project, bool headless)
 	st.pattern = strum_find("Folk");
 	st.art = ART_NORMAL;
 	st.ins_beats = 4;
-	st.gen = (AutogenOptions){.seed = 2002, .mood = MOOD_TRIUMPH, .band = BAND_ROCK, .bpm = 0, .key = -1};
+	st.gen = (AutogenOptions){.seed = 2002, .mood = MOOD_TRIUMPH, .band = BAND_ROCK, .bpm = 0, .key = -1, .variations = true};
 	st.gen_bpm = 120;
 	st.gen_key = 9;
 	st.exp = export_defaults(EXP_MP3);
@@ -243,7 +243,9 @@ bool app_command_by_name(const char *name)
 	if (!strncasecmp(name, "chord ", 6))
 		return chord_parse(name + 6, &st.ch_root, &st.ch_q) ? (st.ch_voicing = 0, true) : false;
 	if (!strncasecmp(name, "seek ", 5)) {
-		app_seek((u32)atoi(name + 5) * (u32)ticks_per_bar);
+		u32 t = (u32)atoi(name + 5) * (u32)ticks_per_bar;
+		app_seek(t);
+		st.panel_tick = t;
 		return true;
 	}
 	if (!strncasecmp(name, "export-to ", 10)) {

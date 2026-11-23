@@ -77,8 +77,11 @@ The classic shapes come first by themselves: C x32010, D xx0232,
 A x02220, E 022100, Am x02210, Em 022000, Dm xx0231, E7 020100,
 Cmaj7 x32000; F 133211 and Bm x2443x among the first three.
 
-Strum patterns are strings of 16ths (`D` down, `u` up, `x` scratch, `H`
-chug, `B`/`A` bass and alternate bass, `0`–`5` picked strings, `P`
-pinch): folk, pop, island, rock 8ths and chugs, punk, gallop, metal
-16ths, funk, reggae, ska, shuffle, arpeggios, Travis picking. See
-`ft2002-cli patterns`.
+Strum patterns (44) are strings of 16ths (`D` down, `u` up, `x` scratch,
+`H` chug, `B`/`A` bass and alternate bass, `0`–`5` picked strings, `P`
+pinch): folk, pop, island, calypso, rock 8ths, chugs, 3-3-2 pushes,
+stop-time, punk 8ths and 16ths, gallop, metal 16ths, funk, disco
+scratch, reggae, ska, shuffle, half-time; arpeggios up, down, up-down
+and cascading, Pima, Travis, forward and backward rolls, outside-in,
+pedal arpeggios, palm-muted arpeggios. They are locked to the bar (step
+= the song's 16th). See `ft2002-cli patterns`.

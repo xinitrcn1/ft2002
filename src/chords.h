@@ -114,5 +114,10 @@ int strum_find(const char *name);
  * number of events added. */
 int strum_write(Song *s, int ch, u32 t0, u32 ticks, const u8 notes[6], int strings, const StrumPattern *p, u8 vel,
                 u8 art, bool ring);
+/* The pattern is locked to the bar (step = the song's 16th). attack_first:
+ * a chord starting on a rest of the pattern is struck anyway (strum_write
+ * does this); off for a continuation of the same chord. */
+int strum_write_ex(Song *s, int ch, u32 t0, u32 ticks, const u8 notes[6], int strings, const StrumPattern *p, u8 vel,
+                   u8 art, bool ring, bool attack_first);
 
 #endif

@@ -58,7 +58,8 @@ int main(void)
 {
 	const char *path = "test_project.ft2";
 	for (int band = 0; band < BAND_COUNT; band++) {
-		AutogenOptions o = {.seed = 11 + (u64)band, .mood = (Mood)(band % MOOD_COUNT), .band = (Band)band, .key = -1};
+		AutogenOptions o = {.seed = 11 + (u64)band, .mood = (Mood)(band % MOOD_COUNT), .band = (Band)band, .key = -1,
+		                   .variations = band % 2 == 0};
 		Song s, t, u;
 		CHECK(autogen(&s, &o), "autogen %s", band_name((Band)band));
 		CHECK(autogen(&u, &o) && same(&s, &u), "%s: not deterministic", band_name((Band)band));

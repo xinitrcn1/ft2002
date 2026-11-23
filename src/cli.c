@@ -1,6 +1,6 @@
 /* ft2002-cli: the workstation without a window (docs/cli.md).
  *
- *   ft2002-cli gen [--seed N] [--mood M] [--band B] [--bpm X] [--key K] -o OUT
+ *   ft2002-cli gen [--seed N] [--mood M] [--band B] [--bpm X] [--key K] [--plain] -o OUT
  *        compose a song; OUT.ft2 saves the project, OUT.wav/.mp3/.opus renders it
  *   ft2002-cli render PROJECT.ft2 -o OUT.(wav|mp3|opus) [--bitrate K] [--cbr] [--rate HZ] [--solo T]
  *   ft2002-cli info PROJECT.ft2
@@ -20,7 +20,7 @@
 
 static int usage(void)
 {
-	fprintf(stderr, "usage: ft2002-cli gen [--seed N] [--mood M] [--band B] [--bpm X] [--key K] -o OUT.(ft2|wav|mp3|opus)\n"
+	fprintf(stderr, "usage: ft2002-cli gen [--seed N] [--mood M] [--band B] [--bpm X] [--key K] [--plain] -o OUT.(ft2|wav|mp3|opus)\n"
 	                "       ft2002-cli render PROJECT.ft2 -o OUT.(wav|mp3|opus) [--bitrate K] [--cbr] [--rate HZ] [--solo T]\n"
 	                "       ft2002-cli info PROJECT.ft2\n"
 	                "       ft2002-cli chords [CHORD...]\n"
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 		return usage();
 	const char *cmd = argv[1];
 	if (!strcmp(cmd, "gen")) {
-		AutogenOptions o = {.seed = 1, .mood = MOOD_CALM, .band = BAND_ROCK, .bpm = 0, .key = -1};
+		AutogenOptions o = {.seed = 1, .mood = MOOD_CALM, .band = BAND_ROCK, .bpm = 0, .key = -1, .variations = true};
 		const char *out = NULL;
 		for (int i = 2; i < argc; i++) {
 			if (!strcmp(argv[i], "--seed") && i + 1 < argc)

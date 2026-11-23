@@ -36,6 +36,7 @@ typedef struct {
 	Band band;
 	float bpm;      /* 0 = the composer's */
 	int key;        /* -1 = the composer's; else a tonic pitch class 0..11 (transposes) */
+	bool variations; /* more progressions, arps and patterns (compose_ex); off: geosim's song as is */
 } AutogenOptions;
 
 /* A chord segment read from the score. */

@@ -169,70 +169,76 @@ static bool track_has_events(const Song *s, int t)
 
 /* ---- rhythm guitars ------------------------------------------------------------- */
 
-static const char *pattern_for(Band band, SectionKind k, const char *style, Rng *r)
+/* Pattern choices per band and section: a list to pick from (a section's
+ * repeats take different ones), and a busier fill for the last two bars of
+ * each 8-bar phrase. */
+typedef struct {
+	const char *main[6];
+	const char *fill[3];
+} PatternSet;
+
+static int list_len(const char *const *l, int max)
 {
-	bool fast = !strcmp(style, "punk") || !strcmp(style, "hardtrance");
+	int n = 0;
+	while (n < max && l[n])
+		n++;
+	return n;
+}
+
+static const PatternSet *pattern_set(Band band, SectionKind k, const char *style)
+{
+	bool fast = !strcmp(style, "amiga punk") || !strcmp(style, "hardtrance") || !strcmp(style, "hardstyle");
+	static const PatternSet ac_intro = {{"Travis", "Ballad picking", "Pima", "Forward roll", "Outside-in", "Pedal arpeggio"}, {"Arpeggio up-down 16ths", "Cascade 16ths"}};
+	static const PatternSet ac_quiet = {{"Arpeggio up", "Arpeggio down", "Root-fifth picks", "Syncopated picking", "Backward roll"}, {"Pinch + roll", "Arpeggio 16ths"}};
+	static const PatternSet ac_loud = {{"Folk", "Island", "Calypso", "Pop", "Offbeat pushes"}, {"Punk 16ths", "Push 3-3-2"}};
+	static const PatternSet ac_verse = {{"Bass + strum", "Pop", "Waltz feel", "Travis pinch", "Half-time"}, {"Folk", "Island"}};
+	static const PatternSet ac_solo = {{"Arpeggio 16ths", "Arpeggio up-down 16ths", "Cascade 16ths"}, {"Pinch + roll"}};
+	static const PatternSet mt_quiet = {{"Halves", "Whole", "Muted arpeggio", "Stop-time"}, {"Chug + accent"}};
+	static const PatternSet mt_verse = {{"Gallop", "Metal 16ths", "Chug + accent", "Rock chug"}, {"Punk 16ths", "Gallop"}};
+	static const PatternSet mt_loud = {{"Rock 8ths", "Push 3-3-2", "Punk", "Chug + accent"}, {"Metal 16ths", "Punk 16ths"}};
+	static const PatternSet rk_intro = {{"Arpeggio up", "Halves", "Muted arpeggio", "Pedal arpeggio", "Stop-time"}, {"Rock chug"}};
+	static const PatternSet rk_quiet = {{"Whole", "Half-time", "Arpeggio down", "Root-fifth picks"}, {"Halves", "Arpeggio up"}};
+	static const PatternSet rk_verse = {{"Rock chug", "Muted arpeggio", "Shuffle", "Push 3-3-2", "Offbeat pushes"}, {"Rock 8ths", "Punk"}};
+	static const PatternSet rk_loud = {{"Rock 8ths", "Shuffle", "Push 3-3-2", "Calypso", "Stop-time"}, {"Punk 16ths", "Rock 8ths"}};
+	static const PatternSet rk_fast = {{"Punk", "Punk 16ths", "Rock 8ths"}, {"Punk 16ths"}};
+	static const PatternSet rk_solo = {{"Arpeggio 16ths", "Cascade 16ths", "Arpeggio up-down 16ths"}, {"Punk 16ths"}};
+	static const PatternSet sg_quiet = {{"Ballad", "Half-time", "Whole", "Arpeggio up"}, {"Arpeggio down"}};
+	static const PatternSet sg_loud = {{"Pop", "Ska", "Calypso", "Offbeat pushes", "Disco scratch"}, {"Funk 16ths", "Disco scratch"}};
+	static const PatternSet sg_dance = {{"Ska", "Reggae", "Disco scratch", "Offbeat pushes"}, {"Funk 16ths"}};
+	static const PatternSet sg_verse = {{"Funk", "Quarters", "Disco scratch", "Syncopated picking", "Root-fifth picks"}, {"Funk 16ths", "Arpeggio 16ths"}};
+	static const PatternSet sg_solo = {{"Arpeggio 16ths", "Cascade 16ths", "Arpeggio up-down 16ths"}, {"Pinch + roll"}};
+	bool quiet = k == SEC_INTRO || k == SEC_OUTRO || k == SEC_BREAKDOWN || k == SEC_BRIDGE;
+	bool loud = k == SEC_CHORUS || k == SEC_DROP || k == SEC_CHOIR;
 	switch (band) {
 	case BAND_ACOUSTIC:
-		switch (k) {
-		case SEC_INTRO:
-		case SEC_OUTRO:
-			return rng_chance(r, 0.5f) ? "Travis" : "Ballad picking";
-		case SEC_BREAKDOWN:
-		case SEC_BRIDGE:
-			return "Arpeggio up";
-		case SEC_CHORUS:
-		case SEC_DROP:
-			return rng_chance(r, 0.5f) ? "Folk" : "Island";
-		case SEC_ARP_SOLO:
-			return "Arpeggio 16ths";
-		default:
-			return rng_chance(r, 0.5f) ? "Bass + strum" : "Pop";
-		}
+		return k == SEC_ARP_SOLO ? &ac_solo : k == SEC_INTRO || k == SEC_OUTRO ? &ac_intro : quiet ? &ac_quiet : loud ? &ac_loud : &ac_verse;
 	case BAND_METAL:
-		switch (k) {
-		case SEC_INTRO:
-		case SEC_BREAKDOWN:
-		case SEC_OUTRO:
-			return "Halves";
-		case SEC_VERSE:
-		case SEC_GROOVE:
-			return rng_chance(r, 0.5f) ? "Gallop" : "Metal 16ths";
-		default:
-			return "Rock 8ths";
-		}
+		return quiet ? &mt_quiet : loud ? &mt_loud : &mt_verse;
 	case BAND_ROCK:
-		switch (k) {
-		case SEC_INTRO:
-			return rng_chance(r, 0.5f) ? "Arpeggio up" : "Halves";
-		case SEC_BREAKDOWN:
-		case SEC_BRIDGE:
-			return "Whole";
-		case SEC_OUTRO:
-			return "Halves";
-		case SEC_VERSE:
-		case SEC_GROOVE:
-			return fast ? "Punk" : "Rock chug";
-		case SEC_ARP_SOLO:
-			return "Arpeggio 16ths";
-		default:
-			return fast ? "Punk" : rng_chance(r, 0.4f) ? "Shuffle" : "Rock 8ths";
-		}
-	default: /* synth + guitar */
-		switch (k) {
-		case SEC_INTRO:
-		case SEC_OUTRO:
-		case SEC_BREAKDOWN:
-			return "Ballad";
-		case SEC_ARP_SOLO:
-			return "Arpeggio 16ths";
-		case SEC_CHORUS:
-		case SEC_DROP:
-			return !strcmp(style, "eurodance") || !strcmp(style, "techno") ? "Ska" : "Pop";
-		default:
-			return rng_chance(r, 0.5f) ? "Funk" : "Quarters";
-		}
+		if (k == SEC_ARP_SOLO)
+			return &rk_solo;
+		if (k == SEC_INTRO)
+			return &rk_intro;
+		if (quiet)
+			return &rk_quiet;
+		if (fast)
+			return &rk_fast;
+		return loud ? &rk_loud : &rk_verse;
+	default:
+		if (k == SEC_ARP_SOLO)
+			return &sg_solo;
+		if (quiet)
+			return &sg_quiet;
+		if (loud)
+			return !strcmp(style, "eurodance") || !strcmp(style, "techno") ? &sg_dance : &sg_loud;
+		return &sg_verse;
 	}
+}
+
+static const StrumPattern *pattern_named(const char *n)
+{
+	int i = strum_find(n);
+	return &strum_patterns[i >= 0 ? i : 0];
 }
 
 static u8 section_vel(SectionKind k)
@@ -290,11 +296,28 @@ static void write_rhythm(Song *s, int ch, const ChordSeg *segs, int nseg, Band b
 	chordlib_build(lib, open, strings);
 	bool power = s->patches[ch].gtr == GTR_CRUNCH || s->patches[ch].gtr == GTR_LEAD;
 	float hand = high ? 5.0f : 1.0f;
+	/* the pattern of each section kind's first occurrence, so repeats differ */
+	int first_pick[SEC_COUNT];
+	int seen[SEC_COUNT] = {0};
+	for (int k = 0; k < SEC_COUNT; k++)
+		first_pick[k] = -1;
 	for (u32 si = 0; si < s->nsections; si++) {
 		const Section *sec = &s->sections[si];
 		u32 a = sec->start_bar * (u32)ticks_per_bar, b = (sec->start_bar + sec->bars) * (u32)ticks_per_bar;
-		const char *pname = pattern_for(band, sec->kind, s->style, r);
-		const StrumPattern *pat = &strum_patterns[strum_find(pname) >= 0 ? strum_find(pname) : 0];
+		const PatternSet *set = pattern_set(band, sec->kind, s->style);
+		int nm = list_len(set->main, 6), nf = list_len(set->fill, 3);
+		int pick;
+		if (first_pick[sec->kind] < 0) {
+			pick = rng_range(r, 0, nm - 1);
+			first_pick[sec->kind] = pick;
+		} else {
+			/* a repeat: the same pattern half the time (the song's identity), else the next one */
+			pick = rng_chance(r, 0.5f) ? first_pick[sec->kind] : (first_pick[sec->kind] + 1 + seen[sec->kind]) % nm;
+		}
+		seen[sec->kind]++;
+		const StrumPattern *pat = pattern_named(set->main[pick]);
+		const StrumPattern *fill = nf ? pattern_named(set->fill[rng_range(r, 0, nf - 1)]) : pat;
+		bool fills = sec->bars >= 8 && rng_chance(r, 0.7f);
 		/* power chords in the loud parts only; open voicings ring in the quiet ones */
 		bool loud = sec->kind == SEC_CHORUS || sec->kind == SEC_DROP || sec->kind == SEC_VERSE || sec->kind == SEC_GROOVE;
 		bool pw = power && loud;
@@ -319,7 +342,17 @@ static void write_rhythm(Song *s, int ch, const ChordSeg *segs, int nseg, Band b
 			u8 notes[6];
 			voicing_notes(lib, v, notes);
 			u8 jv = (u8)FT_CLAMP_VEL(vel + rng_range(r, -5, 5));
-			strum_write(s, ch, t0, t1 - t0, notes, strings, pat, jv, ART_NORMAL, false);
+			/* bar by bar: the last two bars of each 8-bar phrase take the fill */
+			for (u32 t = t0; t < t1;) {
+				u32 bar = t / (u32)ticks_per_bar - sec->start_bar;
+				u32 bar_end = (t / (u32)ticks_per_bar + 1) * (u32)ticks_per_bar;
+				u32 e = bar_end < t1 ? bar_end : t1;
+				bool in_fill = fills && bar % 8 >= 6;
+				/* a pattern shorter than a bar restarts on the bar line */
+				strum_write_ex(s, ch, t, e - t, notes, strings, in_fill ? fill : pat, (u8)FT_CLAMP_VEL(jv + (in_fill ? 6 : 0)),
+				               ART_NORMAL, false, t == t0);
+				t = e;
+			}
 		}
 	}
 	free(lib);
@@ -423,7 +456,8 @@ static void transpose(Song *s, int semis)
 
 bool autogen(Song *out, const AutogenOptions *o)
 {
-	if (!compose(out, o->seed, o->mood))
+	ComposeOptions co = {.variations = o->variations};
+	if (!compose_ex(out, o->seed, o->mood, &co))
 		return false;
 	for (int c = 0; c < CH_COUNT && c < out->ntracks; c++) {
 		out->role[c] = (u8)(c + 1);

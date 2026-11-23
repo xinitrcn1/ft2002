@@ -124,6 +124,39 @@ int main(void)
 		      s.total_bars, s.nevents, (unsigned long long)events_hash(&s));
 		song_free(&s);
 	}
+	/* compose_ex with variations: deterministic and valid; the seed keeps
+	 * geosim's tempo, key, mode and style; most songs differ from geosim's */
+	{
+		int differ = 0;
+		for(int m = 0; m < MOOD_COUNT; ++m) {
+			for(u64 seed = 1; seed <= 20; ++seed) {
+				ComposeOptions o = {.variations = true};
+				Song a, b, g;
+				if(!compose_ex(&a, seed, (Mood)m, &o) || !compose_ex(&b, seed, (Mood)m, &o) || !compose(&g, seed, (Mood)m)) return 1;
+				CHECK(a.nevents == b.nevents && events_hash(&a) == events_hash(&b), "variations: seed %llu mood %d not deterministic", (unsigned long long)seed, m);
+				CHECK(a.bpm == g.bpm && a.key == g.key && a.mode == g.mode && !strcmp(a.style, g.style), "variations: seed %llu mood %d changed the basics",
+				      (unsigned long long)seed, m);
+				bool ok = true;
+				for(u32 i = 0; i < a.nevents; ++i) {
+					const NoteEvent *e = &a.events[i];
+					ok = ok && e->ch < a.ntracks && e->count >= 1 && e->count <= 6 && (i == 0 || a.events[i - 1].tick <= e->tick);
+					for(int k = 0; k < 6; ++k) ok = ok && e->notes[k] <= 127;
+				}
+				CHECK(ok, "variations: seed %llu mood %d: a bad event", (unsigned long long)seed, m);
+				differ += events_hash(&a) != events_hash(&g);
+				song_free(&a);
+				song_free(&b);
+				song_free(&g);
+			}
+		}
+		CHECK(differ >= 100, "variations: only %d of 120 songs differ from geosim's", differ);
+		ComposeOptions off = {.variations = false};
+		Song a, g;
+		if(!compose_ex(&a, 7, MOOD_CALM, &off) || !compose(&g, 7, MOOD_CALM)) return 1;
+		CHECK(events_hash(&a) == events_hash(&g), "variations off is not geosim's song");
+		song_free(&a);
+		song_free(&g);
+	}
 	CHECK(next_seed(0) == 0xE220A8397B1DCDAFull, "next_seed(0) = %016llx", (unsigned long long)next_seed(0));
 
 	if(failures) fprintf(stderr, "test_composer: %d failure(s)\n", failures);

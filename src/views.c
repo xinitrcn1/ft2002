@@ -851,7 +851,9 @@ static void side_generate(int x, int y, int w, int h)
 	char kf[16];
 	snprintf(kf, sizeof kf, "%s", note_names[st.gen_key % 12]);
 	ui_spin(ui_id("gkey", 0), x + pad + PX(90), cy, cw - PX(90), PX(24), &st.gen_key, 0, 11, kf);
-	cy += PX(40);
+	cy += PX(30);
+	ui_toggle(ui_id("gvars", 0), x + pad, cy + PX(3), "More variations", &st.gen.variations);
+	cy += PX(30);
 	if (ui_button(ui_id("generate", 0), x + pad, cy, cw, PX(34), "Generate song (Ctrl+G)", true))
 		app_generate();
 	cy += PX(46);
