@@ -1,0 +1,331 @@
+/* Colours from VSCodium's dark_modern.json / light_modern.json (0xRRGGBBAA),
+ * as in vxide. */
+#include "theme.h"
+#include <math.h>
+
+Theme themes[THEME_COUNT] = {
+    [THEME_DARK] =
+        {
+            "Dark Modern",
+            {
+                [C_FOCUS_BORDER] = 0x0078D4FF,
+                [C_FG] = 0xCCCCCCFF,
+                [C_FG_DIM] = 0x9D9D9DFF,
+                [C_ACTBAR_BG] = 0x181818FF,
+                [C_ACTBAR_FG] = 0xD7D7D7FF,
+                [C_ACTBAR_FG_INACTIVE] = 0x868686FF,
+                [C_ACTBAR_ACTIVE_BORDER] = 0x0078D4FF,
+                [C_ACTBAR_BORDER] = 0x2B2B2BFF,
+                [C_BADGE_BG] = 0x0078D4FF,
+                [C_BADGE_FG] = 0xFFFFFFFF,
+                [C_SIDEBAR_BG] = 0x181818FF,
+                [C_SIDEBAR_FG] = 0xCCCCCCFF,
+                [C_SIDEBAR_BORDER] = 0x2B2B2BFF,
+                [C_SIDEBAR_TITLE_FG] = 0xCCCCCCFF,
+                [C_SECTION_HEADER_FG] = 0xCCCCCCFF,
+                [C_SECTION_HEADER_BORDER] = 0x2B2B2BFF,
+                [C_LIST_HOVER_BG] = 0x2A2D2EFF,
+                [C_LIST_ACTIVE_BG] = 0x04395EFF,
+                [C_LIST_ACTIVE_FG] = 0xFFFFFFFF,
+                [C_LIST_INACTIVE_BG] = 0x37373DFF,
+                [C_LIST_FOCUS_OUTLINE] = 0x0078D4FF,
+                [C_TREE_INDENT_GUIDE] = 0x585858FF,
+                [C_TABS_BG] = 0x181818FF,
+                [C_TAB_ACTIVE_BG] = 0x1F1F1FFF,
+                [C_TAB_ACTIVE_FG] = 0xFFFFFFFF,
+                [C_TAB_ACTIVE_BORDER_TOP] = 0x0078D4FF,
+                [C_TAB_INACTIVE_BG] = 0x181818FF,
+                [C_TAB_INACTIVE_FG] = 0x9D9D9DFF,
+                [C_TAB_BORDER] = 0x2B2B2BFF,
+                [C_TABS_BORDER] = 0x2B2B2BFF,
+                [C_EDITOR_BG] = 0x1F1F1FFF,
+                [C_EDITOR_FG] = 0xCCCCCCFF,
+                [C_LINE_NUMBER] = 0x6E7681FF,
+                [C_LINE_NUMBER_ACTIVE] = 0xCCCCCCFF,
+                [C_LINE_HIGHLIGHT_BORDER] = 0x282828FF,
+                [C_SELECTION] = 0x264F78FF,
+                [C_SELECTION_INACTIVE] = 0x3A3D41FF,
+                [C_SELECTION_HIGHLIGHT] = 0xADD6FF26,
+                [C_FIND_MATCH] = 0x9E6A03FF,
+                [C_FIND_MATCH_OTHER] = 0xEA5C0055,
+                [C_CURSOR] = 0xAEAFADFF,
+                [C_WHITESPACE] = 0xE3E4E229,
+                [C_INDENT_GUIDE] = 0x404040FF,
+                [C_INDENT_GUIDE_ACTIVE] = 0x707070FF,
+                [C_BRACKET_MATCH_BG] = 0x0064001A,
+                [C_BRACKET_MATCH_BORDER] = 0x888888FF,
+                [C_RULER] = 0x5A5A5AFF,
+                [C_SCROLLBAR_SHADOW] = 0x000000FF,
+                [C_SCROLL_SLIDER] = 0x79797966,
+                [C_SCROLL_SLIDER_HOVER] = 0x646464B3,
+                [C_SCROLL_SLIDER_ACTIVE] = 0xBFBFBF66,
+                [C_ERROR] = 0xF14C4CFF,
+                [C_WARNING] = 0xCCA700FF,
+                [C_INFO] = 0x3794FFFF,
+                [C_GUTTER_ADDED] = 0x2EA043FF,
+                [C_GUTTER_MODIFIED] = 0x0078D4FF,
+                [C_GUTTER_DELETED] = 0xF85149FF,
+                [C_GIT_MODIFIED] = 0xE2C08DFF,
+                [C_GIT_UNTRACKED] = 0x73C991FF,
+                [C_GIT_DELETED] = 0xC74E39FF,
+                [C_GIT_ADDED] = 0x81B88BFF,
+                [C_GIT_IGNORED] = 0x8C8C8CFF,
+                [C_GIT_CONFLICT] = 0xE4676BFF,
+                [C_PANEL_BG] = 0x181818FF,
+                [C_PANEL_BORDER] = 0x2B2B2BFF,
+                [C_PANEL_TITLE_ACTIVE_FG] = 0xCCCCCCFF,
+                [C_PANEL_TITLE_INACTIVE_FG] = 0x9D9D9DFF,
+                [C_PANEL_TITLE_ACTIVE_BORDER] = 0x0078D4FF,
+                [C_STATUS_BG] = 0x181818FF,
+                [C_STATUS_FG] = 0xCCCCCCFF,
+                [C_STATUS_BORDER] = 0x2B2B2BFF,
+                [C_STATUS_REMOTE_BG] = 0x0078D4FF,
+                [C_STATUS_REMOTE_FG] = 0xFFFFFFFF,
+                [C_STATUS_HOVER_BG] = 0xFFFFFF1F,
+                [C_INPUT_BG] = 0x313131FF,
+                [C_INPUT_FG] = 0xCCCCCCFF,
+                [C_INPUT_BORDER] = 0x3C3C3CFF,
+                [C_INPUT_PLACEHOLDER] = 0x989898FF,
+                [C_WIDGET_BG] = 0x202020FF,
+                [C_WIDGET_BORDER] = 0x313131FF,
+                [C_WIDGET_SHADOW] = 0x00000066,
+                [C_QUICK_BG] = 0x222222FF,
+                [C_QUICK_FG] = 0xCCCCCCFF,
+                [C_QUICK_ACTIVE_BG] = 0x04395EFF,
+                [C_QUICK_ACTIVE_FG] = 0xFFFFFFFF,
+                [C_QUICK_HIGHLIGHT] = 0x2AAAFFFF,
+                [C_BUTTON_BG] = 0x0078D4FF,
+                [C_BUTTON_FG] = 0xFFFFFFFF,
+                [C_BUTTON_HOVER_BG] = 0x026EC1FF,
+                [C_SASH_HOVER] = 0x0078D4FF,
+                [C_BREADCRUMB_FG] = 0xA9A9A9FF,
+                [C_DESCRIPTION_FG] = 0x9D9D9DFF,
+                [C_DIFF_INSERTED] = 0x9CCC2C33,
+                [C_DIFF_REMOVED] = 0xFF000033,
+                [C_CODELENS] = 0x999999FF,
+                [C_MENU_BG] = 0x1F1F1FFF,
+                [C_MENU_FG] = 0xCCCCCCFF,
+                [C_MENU_SEL_BG] = 0x0078D4FF,
+                [C_MENU_SEL_FG] = 0xFFFFFFFF,
+                [C_MENU_SEP] = 0x454545FF,
+                [C_MENU_BORDER] = 0x454545FF,
+                [C_GRAPH_1] = 0xFFB000FF,
+                [C_GRAPH_2] = 0xDC267FFF,
+                [C_GRAPH_3] = 0x994F00FF,
+                [C_GRAPH_4] = 0x40B0A6FF,
+                [C_GRAPH_5] = 0xB66DFFFF,
+                [C_GRAPH_REF] = 0x59A4F9FF,
+                [C_GRAPH_REMOTE_REF] = 0xB180D7FF,
+                [C_GRAPH_BASE_REF] = 0xEA5C00FF,
+                [C_HOVER_BG] = 0x202020FF,
+                [C_LINK] = 0x4DAAFCFF,
+            },
+        },
+    [THEME_LIGHT] =
+        {
+            "Light Modern",
+            {
+                [C_FOCUS_BORDER] = 0x005FB8FF,
+                [C_FG] = 0x3B3B3BFF,
+                [C_FG_DIM] = 0x868686FF,
+                [C_ACTBAR_BG] = 0xF8F8F8FF,
+                [C_ACTBAR_FG] = 0x1F1F1FFF,
+                [C_ACTBAR_FG_INACTIVE] = 0x616161FF,
+                [C_ACTBAR_ACTIVE_BORDER] = 0x005FB8FF,
+                [C_ACTBAR_BORDER] = 0xE5E5E5FF,
+                [C_BADGE_BG] = 0x005FB8FF,
+                [C_BADGE_FG] = 0xFFFFFFFF,
+                [C_SIDEBAR_BG] = 0xF8F8F8FF,
+                [C_SIDEBAR_FG] = 0x3B3B3BFF,
+                [C_SIDEBAR_BORDER] = 0xE5E5E5FF,
+                [C_SIDEBAR_TITLE_FG] = 0x3B3B3BFF,
+                [C_SECTION_HEADER_FG] = 0x3B3B3BFF,
+                [C_SECTION_HEADER_BORDER] = 0xE5E5E5FF,
+                [C_LIST_HOVER_BG] = 0xF2F2F2FF,
+                [C_LIST_ACTIVE_BG] = 0xE8E8E8FF,
+                [C_LIST_ACTIVE_FG] = 0x000000FF,
+                [C_LIST_INACTIVE_BG] = 0xE4E6F1FF,
+                [C_LIST_FOCUS_OUTLINE] = 0x005FB8FF,
+                [C_TREE_INDENT_GUIDE] = 0xA9A9A9FF,
+                [C_TABS_BG] = 0xF8F8F8FF,
+                [C_TAB_ACTIVE_BG] = 0xFFFFFFFF,
+                [C_TAB_ACTIVE_FG] = 0x3B3B3BFF,
+                [C_TAB_ACTIVE_BORDER_TOP] = 0x005FB8FF,
+                [C_TAB_INACTIVE_BG] = 0xF8F8F8FF,
+                [C_TAB_INACTIVE_FG] = 0x868686FF,
+                [C_TAB_BORDER] = 0xE5E5E5FF,
+                [C_TABS_BORDER] = 0xE5E5E5FF,
+                [C_EDITOR_BG] = 0xFFFFFFFF,
+                [C_EDITOR_FG] = 0x3B3B3BFF,
+                [C_LINE_NUMBER] = 0x6E7681FF,
+                [C_LINE_NUMBER_ACTIVE] = 0x171184FF,
+                [C_LINE_HIGHLIGHT_BORDER] = 0xEEEEEEFF,
+                [C_SELECTION] = 0xADD6FFFF,
+                [C_SELECTION_INACTIVE] = 0xE5EBF1FF,
+                [C_SELECTION_HIGHLIGHT] = 0xADD6FF80,
+                [C_FIND_MATCH] = 0xA8AC94FF,
+                [C_FIND_MATCH_OTHER] = 0xEA5C0055,
+                [C_CURSOR] = 0x000000FF,
+                [C_WHITESPACE] = 0x33333333,
+                [C_INDENT_GUIDE] = 0xD3D3D3FF,
+                [C_INDENT_GUIDE_ACTIVE] = 0x939393FF,
+                [C_BRACKET_MATCH_BG] = 0x0064001A,
+                [C_BRACKET_MATCH_BORDER] = 0xB9B9B9FF,
+                [C_RULER] = 0xD3D3D3FF,
+                [C_SCROLLBAR_SHADOW] = 0xDDDDDDFF,
+                [C_SCROLL_SLIDER] = 0x64646466,
+                [C_SCROLL_SLIDER_HOVER] = 0x646464B3,
+                [C_SCROLL_SLIDER_ACTIVE] = 0x00000099,
+                [C_ERROR] = 0xE51400FF,
+                [C_WARNING] = 0xBF8803FF,
+                [C_INFO] = 0x1A85FFFF,
+                [C_GUTTER_ADDED] = 0x2EA043FF,
+                [C_GUTTER_MODIFIED] = 0x005FB8FF,
+                [C_GUTTER_DELETED] = 0xF85149FF,
+                [C_GIT_MODIFIED] = 0x895503FF,
+                [C_GIT_UNTRACKED] = 0x007100FF,
+                [C_GIT_DELETED] = 0xAD0707FF,
+                [C_GIT_ADDED] = 0x587C0CFF,
+                [C_GIT_IGNORED] = 0x8E8E90FF,
+                [C_GIT_CONFLICT] = 0xAD0707FF,
+                [C_PANEL_BG] = 0xF8F8F8FF,
+                [C_PANEL_BORDER] = 0xE5E5E5FF,
+                [C_PANEL_TITLE_ACTIVE_FG] = 0x3B3B3BFF,
+                [C_PANEL_TITLE_INACTIVE_FG] = 0x3B3B3BB3,
+                [C_PANEL_TITLE_ACTIVE_BORDER] = 0x005FB8FF,
+                [C_STATUS_BG] = 0xF8F8F8FF,
+                [C_STATUS_FG] = 0x3B3B3BFF,
+                [C_STATUS_BORDER] = 0xE5E5E5FF,
+                [C_STATUS_REMOTE_BG] = 0x005FB8FF,
+                [C_STATUS_REMOTE_FG] = 0xFFFFFFFF,
+                [C_STATUS_HOVER_BG] = 0x1F1F1F11,
+                [C_INPUT_BG] = 0xFFFFFFFF,
+                [C_INPUT_FG] = 0x3B3B3BFF,
+                [C_INPUT_BORDER] = 0xCECECEFF,
+                [C_INPUT_PLACEHOLDER] = 0x767676FF,
+                [C_WIDGET_BG] = 0xF8F8F8FF,
+                [C_WIDGET_BORDER] = 0xE5E5E5FF,
+                [C_WIDGET_SHADOW] = 0x00000029,
+                [C_QUICK_BG] = 0xF8F8F8FF,
+                [C_QUICK_FG] = 0x3B3B3BFF,
+                [C_QUICK_ACTIVE_BG] = 0xE8E8E8FF,
+                [C_QUICK_ACTIVE_FG] = 0x000000FF,
+                [C_QUICK_HIGHLIGHT] = 0x0066BFFF,
+                [C_BUTTON_BG] = 0x005FB8FF,
+                [C_BUTTON_FG] = 0xFFFFFFFF,
+                [C_BUTTON_HOVER_BG] = 0x0258A8FF,
+                [C_SASH_HOVER] = 0x005FB8FF,
+                [C_BREADCRUMB_FG] = 0x616161FF,
+                [C_DESCRIPTION_FG] = 0x717171FF,
+                [C_DIFF_INSERTED] = 0x9CCC2C40,
+                [C_DIFF_REMOVED] = 0xFF000033,
+                [C_CODELENS] = 0x919191FF,
+                [C_MENU_BG] = 0xFFFFFFFF,
+                [C_MENU_FG] = 0x3B3B3BFF,
+                [C_MENU_SEL_BG] = 0x005FB8FF,
+                [C_MENU_SEL_FG] = 0xFFFFFFFF,
+                [C_MENU_SEP] = 0xD4D4D4FF,
+                [C_MENU_BORDER] = 0xCECECEFF,
+                [C_GRAPH_1] = 0xFFB000FF,
+                [C_GRAPH_2] = 0xDC267FFF,
+                [C_GRAPH_3] = 0x994F00FF,
+                [C_GRAPH_4] = 0x40B0A6FF,
+                [C_GRAPH_5] = 0xB66DFFFF,
+                [C_GRAPH_REF] = 0x005FB8FF,
+                [C_GRAPH_REMOTE_REF] = 0x652D90FF,
+                [C_GRAPH_BASE_REF] = 0xEA5C00FF,
+                [C_HOVER_BG] = 0xF8F8F8FF,
+                [C_LINK] = 0x005FB8FF,
+            },
+        },
+};
+
+
+/* ---- Dark Modern, darker ------------------------------------------------------
+ *
+ * Asked for: more contrast than Dark Modern, the red of a deleted file on a
+ * tab especially. Derived rather than drawn up by hand so it stays Dark
+ * Modern in every other respect:
+ *  - neutral dark surfaces (editor, side bar, tabs, status bar, panels, menus)
+ *    go to half their brightness, #1F1F1F -> #0F0F0F;
+ *  - borders, hover and selection colours stay, so they stand out more;
+ *  - text that carries meaning (git decorations, errors, warnings, dim and
+ *    secondary text, line numbers) is raised until
+ *    it reaches a WCAG contrast ratio against the surface it is drawn on:
+ *    7:1 (AAA) for body text, 5.5:1 for decorations and secondary text.
+ *    Raising keeps the hue: channels are scaled up first, then mixed toward
+ *    white only if that is not enough. */
+
+static double chan(u32 c8)
+{
+	double c = (double)c8 / 255.0;
+	return c <= 0.03928 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4);
+}
+
+static double lum(u32 c)
+{
+	return 0.2126 * chan((c >> 24) & 255) + 0.7152 * chan((c >> 16) & 255) + 0.0722 * chan((c >> 8) & 255);
+}
+
+double theme_contrast(u32 a, u32 b)
+{
+	double la = lum(a), lb = lum(b);
+	return la > lb ? (la + 0.05) / (lb + 0.05) : (lb + 0.05) / (la + 0.05);
+}
+
+static u32 rgb(double r, double g, double b, u32 a)
+{
+	u32 R = (u32)FT_CLAMP(r + 0.5, 0, 255), G = (u32)FT_CLAMP(g + 0.5, 0, 255), B = (u32)FT_CLAMP(b + 0.5, 0, 255);
+	return R << 24 | G << 16 | B << 8 | (a & 255);
+}
+
+static u32 scale(u32 c, double f)
+{
+	return rgb(((c >> 24) & 255) * f, ((c >> 16) & 255) * f, ((c >> 8) & 255) * f, c);
+}
+
+/* brighter until contrast(c, bg) >= want */
+static u32 lift(u32 c, u32 bg, double want)
+{
+	for (int i = 0; i < 200 && theme_contrast(c, bg) < want; i++) {
+		u32 r = (c >> 24) & 255, g = (c >> 16) & 255, b = (c >> 8) & 255;
+		u32 mx = FT_MAX(r, FT_MAX(g, b));
+		if (mx < 250)
+			c = scale(c, 1.03); /* same hue, brighter */
+		else
+			c = rgb(r + (255 - r) * 0.06, g + (255 - g) * 0.06, b + (255 - b) * 0.06, c); /* toward white */
+	}
+	return c;
+}
+
+static bool neutral_surface(u32 c)
+{
+	u32 r = (c >> 24) & 255, g = (c >> 16) & 255, b = (c >> 8) & 255;
+	u32 mx = FT_MAX(r, FT_MAX(g, b)), mn = FT_MIN(r, FT_MIN(g, b));
+	return (c & 255) == 255 && mx - mn <= 6 && lum(c) < 0.0165; /* #222222 and darker greys */
+}
+
+void theme_init(void)
+{
+	Theme *t = &themes[THEME_DARKER];
+	*t = themes[THEME_DARK];
+	t->name = "Dark Modern Darker";
+	for (int i = 0; i < C_COUNT_; i++)
+		if (neutral_surface(t->c[i]))
+			t->c[i] = scale(t->c[i], 0.5);
+	/* the darkest surface text appears on (tabs / side bar / status bar) */
+	u32 bg = t->c[C_TABS_BG];
+	if (lum(t->c[C_SIDEBAR_BG]) > lum(bg))
+		bg = t->c[C_SIDEBAR_BG];
+	if (lum(t->c[C_EDITOR_BG]) > lum(bg))
+		bg = t->c[C_EDITOR_BG];
+	static const int body[] = {C_FG, C_SIDEBAR_FG, C_EDITOR_FG, C_TAB_ACTIVE_FG};
+	static const int deco[] = {C_GIT_MODIFIED,      C_GIT_UNTRACKED, C_GIT_DELETED,     C_GIT_ADDED,
+	                           C_GIT_CONFLICT,      C_GIT_IGNORED,   C_ERROR,           C_WARNING,
+	                           C_FG_DIM,            C_TAB_INACTIVE_FG, C_LINE_NUMBER,   C_DESCRIPTION_FG,
+	                           C_BREADCRUMB_FG,     C_CODELENS,      C_ACTBAR_FG_INACTIVE, C_LINK};
+	for (size_t i = 0; i < FT_COUNT(body); i++)
+		t->c[body[i]] = lift(t->c[body[i]], bg, 7.0);
+	for (size_t i = 0; i < FT_COUNT(deco); i++)
+		t->c[deco[i]] = lift(t->c[deco[i]], bg, 5.5);
+}
