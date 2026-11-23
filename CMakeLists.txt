@@ -22,6 +22,10 @@ find_package(SDL3 REQUIRED CONFIG)
 find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(FREETYPE REQUIRED IMPORTED_TARGET freetype2)
+pkg_check_modules(OPUS REQUIRED IMPORTED_TARGET opus)
+pkg_check_modules(OGG REQUIRED IMPORTED_TARGET ogg)
+find_path(LAME_INCLUDE lame/lame.h REQUIRED)
+find_library(LAME_LIB mp3lame REQUIRED)
 find_program(GLSLANG glslangValidator REQUIRED)
 
 include(cmake/CPM.cmake)
@@ -48,10 +52,13 @@ add_custom_target(shaders DEPENDS ${SPV_HEADERS})
 
 # --- the core: score, synth, guitars, chords, composer, projects, export ----
 # (no window, no GPU, no audio device: tested headlessly, used by the CLI)
-add_library(ft_core STATIC src/song.c src/composer.c src/chords.c)
+add_library(ft_core STATIC src/song.c src/composer.c src/synth.c src/guitar.c src/chords.c src/export.c)
 target_include_directories(ft_core PUBLIC src)
-target_link_libraries(ft_core PUBLIC m)
+target_include_directories(ft_core PRIVATE ${LAME_INCLUDE})
+target_link_libraries(ft_core PUBLIC PkgConfig::OPUS PkgConfig::OGG ${LAME_LIB} m)
 target_compile_options(ft_core PRIVATE ${FT_WARN})
+# the synth must keep up with real time in Debug builds too
+set_source_files_properties(src/synth.c src/guitar.c PROPERTIES COMPILE_OPTIONS "-O2")
 
 # --- the workbench: window, Vulkan, fonts, widgets (the UI layer is vxide's) --
 add_executable(ft2002 src/main.c src/base.c src/gpu.c src/font.c src/draw.c src/icons.c src/theme.c src/menu.c
@@ -65,7 +72,7 @@ target_compile_options(ft2002 PRIVATE ${FT_WARN})
 # --- tests ------------------------------------------------------------------
 include(CTest)
 if(BUILD_TESTING)
-  foreach(t composer chords)
+  foreach(t composer chords guitar)
     add_executable(test_${t} tests/test_${t}.c)
     target_link_libraries(test_${t} PRIVATE ft_core)
     add_test(NAME ${t} COMMAND test_${t})
